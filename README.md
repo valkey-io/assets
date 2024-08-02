@@ -1,1 +1,1 @@
-# assets
+This repository holds a collection of various static Valkey assets.
