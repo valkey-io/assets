@@ -4,49 +4,46 @@
 
 `slides/Valkey community deck.pptx`
 
-## Deck Structure (48 slides)
+## Deck Structure (42 slides)
 
-### Section 1: Background (slides 2-6)
-| Slide | Title | Update Frequency |
-|-------|-------|-----------------|
-| 2 | [Divider] Background | Stable |
-| 3 | Introducing the Valkey project | Stable |
-| 4 | Backed by industry leaders | Leave as-is (corporate supporters) |
-| 5 | The Valkey project is thriving | Every release (stats) |
-| 6 | Latest developments in Valkey OSS | Every major release (timeline) |
+### Section 1: General (slides 1-18)
 
-### Section 2: Feature Deep Dive (slides 7-30)
-| Slide | Title | Update Frequency |
-|-------|-------|-----------------|
-| 7 | [Divider] Feature Deep Dive | Stable |
-| 8 | Valkey 7.2 (April 2024) | Stable |
-| 9 | Valkey 8.0 (September 2024) | Stable |
-| 10 | Valkey 8.1 (April 2025) | Stable |
-| 11 | Valkey 9.0 (October 2025) | Stable |
-| 12 | Valkey 9.1 (May 2026) | Stable |
-| 13 | [Divider] Valkey 8.0 | Stable |
-| 14-22 | Valkey 8.0 deep dives | Stable |
-| 23 | [Divider] Valkey 8.1 | Stable |
-| 24-31 | Valkey 8.1 deep dives | Stable |
-| 32 | What's next | Every release |
-| 33 | Features under active development | Every release (roadmap) |
+High-level project overview, release summaries, integrations, and migrations.
 
-### Section 3: Integrations (slides 34-37)
-| Slide | Title | Update Frequency |
-|-------|-------|-----------------|
-| 34 | [Divider] Integrations | Stable |
-| 35 | Valkey module distribution | When modules change |
-| 36 | Valkey Glide | Stable |
-| 37 | Get involved in the project | Stable |
+| Slide | Title | Layout | Update Frequency |
+|-------|-------|--------|-----------------|
+| 1 | (Title slide) | Title + Speaker | Stable |
+| 2 | [Divider] Background | Divider | Stable |
+| 3 | Introducing the Valkey project | Title + Cont | Stable |
+| 4 | Backed by industry leaders | Title + Cont | Leave as-is |
+| 5 | The Valkey project is thriving | Title + Cont | Every release (stats) |
+| 6 | Latest developments in Valkey OSS | Title + Cont | Every major release (timeline) |
+| 7 | Valkey 7.2 (April 2024) | Title + Cont | Stable |
+| 8 | Valkey 8.0 (September 2024) | Title + Cont | Stable |
+| 9 | Valkey 8.1 (April 2025) | Title + Cont | Stable |
+| 10 | Valkey 9.0 (October 2025) | Title + Cont | Stable |
+| 11 | Valkey 9.1 (May 2026) | Title + Cont | Stable |
+| 12 | Get involved in the project | Title + Cont | Stable |
+| 13 | [Divider] Integrations | Divider | Stable |
+| 14 | Valkey module distribution | Title + 3x Cont with Headings | When modules change |
+| 15 | Valkey Admin | Title + Cont + Right Img Small | When Valkey Admin updates |
+| 16 | [Divider] Migrations | Divider | Stable |
+| 17 | Migrating from Redis OSS to Valkey | Title + Cont | Stable |
+| 18 | Strategies for migration | Title + Cont | Stable |
 
-### Section 4: Migrations (slides 38-40)
-| Slide | Title | Update Frequency |
-|-------|-------|-----------------|
-| 38 | [Divider] Migrations | Stable |
-| 39 | Migrating from Redis OSS to Valkey | Stable |
-| 40 | Strategies for migration | Stable |
+### Section 2: Features (slides 19-33)
 
-Slides 41-49 are template/thank-you slides kept for layout reference.
+Feature-specific deep dives with technical detail.
+
+| Slide | Title | Layout | Update Frequency |
+|-------|-------|--------|-----------------|
+| 19 | [Divider] Memory Efficiency | Divider | Stable |
+| 20-26 | A new hash table (7 slides) | Title + Cont | Stable |
+| 27 | [Divider] Performance | Divider | Stable |
+| 28-32 | Thread scalable command processing (5 slides) | Title + Cont | Stable |
+| 33 | Multithreaded performance | Title + Cont | Stable |
+
+Slides 34-42 are template/thank-you slides kept for layout reference.
 
 ## What to Update
 
@@ -100,17 +97,9 @@ for shape in slide.shapes:
                 print(child.text_frame.text)
 ```
 
-### Slide 33: Features Under Active Development
-
-Remove items that have shipped. Add items from the current roadmap. Uses paragraph levels:
-- Level 0: category headers ("Reliability", "New functionality")
-- Level 1: bullet items under each category
-
-Speaker notes should explain what shipped and what's next.
-
 ### Adding a New Release Overview Slide
 
-When a new major/minor version ships, add a summary slide after the existing release slides (currently after slide 12). Use layout index 1 ("Title + Cont"). Include a source citation at the bottom in 10pt italic.
+When a new major/minor version ships, add a summary slide after the existing release slides (currently after slide 11). Use layout index 1 ("Title + Cont"). Include a source citation at the bottom in 10pt italic.
 
 ## How to Edit the PPTX Programmatically
 
@@ -168,6 +157,8 @@ slides.insert(target_index, new_elem)
 
 ### Removing Slides
 
+**WARNING:** `drop_rel` + delete from `_sldIdLst` leaves orphan XML in the zip, causing "needs repair" errors in PowerPoint. Prefer overwriting slide content in-place or adding new slides without deleting old ones. If deletion is unavoidable, validate the output opens cleanly.
+
 ```python
 # ALWAYS remove from highest index first to avoid shifting issues
 rId = prs.slides._sldIdLst[index].rId
@@ -177,7 +168,7 @@ del prs.slides._sldIdLst[index]
 
 ## Release Overview Slide Style
 
-Release overview slides (8-12) follow a consistent format. Key rules:
+Release overview slides (7-11) follow a consistent format. Key rules:
 
 ### Bullet Style
 
@@ -240,6 +231,247 @@ run.font.color.theme_color = MSO_THEME_COLOR.DARK_1
 
 Do NOT put the source inside the body placeholder. It floats up with the content and looks wrong.
 
+## Custom Slide Style (Cards and Diagrams)
+
+For slides that go beyond the standard placeholder layouts (comparison cards, architecture diagrams, etc.), build with native shapes directly. Use layout index 7 ("Title Only") or 14 ("Holding", zero placeholders) and remove any unwanted placeholders from the slide.
+
+### Standard Coordinates
+
+All custom slides must align with the deck's standard positioning:
+
+```python
+TITLE_LEFT = 609600
+TITLE_TOP = 400019
+TITLE_W = 11062800
+TITLE_H = 443198
+CONTENT_LEFT = 609600
+CONTENT_TOP = 1445931
+CONTENT_W = 11062800
+CONTENT_H = 4565111
+```
+
+### Shape Rules
+
+- Use `MSO_SHAPE.RECTANGLE` for all shapes. No rounded corners unless explicitly needed.
+- Text shapes: `fill.background()`, `line.fill.background()`, margins all zero, `vertical_anchor = MSO_ANCHOR.MIDDLE`.
+- Card backgrounds: `fill.solid()` with theme color, `line.fill.background()` (no border) or thin border with `line.width = Pt(0.75)`.
+- Accent bars: `RECTANGLE`, height=73152 EMU, solid fill with accent color, no line.
+- Always use theme colors (`MSO_THEME_COLOR.*`) instead of hardcoded RGB values.
+
+### Theme Colors (Valkey scheme)
+
+| Token | Hex | Use |
+|-------|-----|-----|
+| DARK_1 | #000000 | Primary text |
+| DARK_2 | #232F3E | Secondary text, subtitles |
+| LIGHT_1 | #FFFFFF | White |
+| LIGHT_2 | #F1F3F3 | Card backgrounds (neutral) |
+| ACCENT_1 | #6983FF | Primary accent, highlights, bars |
+| ACCENT_2 | #1A2026 | Dark accent |
+| ACCENT_3 | #632637 | Warm/red accent |
+| ACCENT_4 | #30176E | Purple accent |
+| ACCENT_5 | #BCB5E7 | Light purple (card fill) |
+| ACCENT_6 | #FBD8BF | Light peach (card fill) |
+
+### Card Pattern (Two-Column Comparison)
+
+```python
+from pptx.enum.shapes import MSO_SHAPE
+from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+from pptx.enum.dml import MSO_THEME_COLOR
+
+col_gap = Emu(200000)
+col_w = (CONTENT_W - col_gap) // 2
+col_h = Emu(2800000)  # adjust to content
+col_y = CONTENT_TOP
+pad = Emu(182880)
+inner_w = col_w - 2 * pad
+
+lx = CONTENT_LEFT
+rx = CONTENT_LEFT + col_w + col_gap
+
+# Card background
+bg = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, lx, col_y, col_w, col_h)
+bg.fill.solid()
+bg.fill.fore_color.theme_color = MSO_THEME_COLOR.ACCENT_5
+bg.line.fill.background()
+
+# Top accent bar
+bar = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, lx, col_y, col_w, Emu(73152))
+bar.fill.solid()
+bar.fill.fore_color.theme_color = MSO_THEME_COLOR.ACCENT_1
+bar.line.fill.background()
+
+# Card title (18pt bold)
+# Card body (13pt regular + 12pt gray descriptions)
+```
+
+### Card Pattern (Three-Column)
+
+```python
+card_gap = Emu(200000)
+card_w = (CONTENT_W - 2 * card_gap) // 3
+card_h = Emu(1500000)
+card_y = CONTENT_TOP
+
+for i in range(3):
+    cx = CONTENT_LEFT + i * (card_w + card_gap)
+    bg = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, cx, card_y, card_w, card_h)
+    bg.fill.solid()
+    bg.fill.fore_color.theme_color = MSO_THEME_COLOR.LIGHT_2
+    bg.line.fill.background()
+```
+
+### Removing Layout Placeholders
+
+When using "Title Only" layout for fully custom slides, remove the title placeholder so it doesn't show an empty field:
+
+```python
+spTree = slide.shapes._spTree
+for shape in list(slide.shapes):
+    try:
+        if shape.placeholder_format.idx == 0:
+            spTree.remove(shape._element)
+    except ValueError:
+        pass
+```
+
+### Slide Master Limitations
+
+python-pptx cannot add new slide layouts to the slide master. The `SlideLayouts` collection only supports `get_by_name`, `index`, and `remove`. Adding layouts requires manual OOXML manipulation.
+
+## Images and Diagrams
+
+**Prefer native PowerPoint shapes for diagrams.** Rectangles, connectors, and text boxes are editable, copyable, and scale cleanly. Use `add_shape()` and `add_connector()` instead of generating PNGs. When a diagram has a grouping wrapper (e.g. dashed box around related items), put the label in a separate text box positioned above the child shapes so it isn't hidden behind them.
+
+**Use raster images (PNG/JPG) for integration/product screenshots.** Layout 9 ("Title + Cont + Right Img Small") has a picture placeholder for this. Source screenshots from the project's GitHub repo `/screenshots` directory when available.
+
+### Inserting SVGs
+
+python-pptx doesn't support SVG insertion natively (PIL can't read SVGs). However, SVGs can be inserted by bypassing PIL and directly creating the OOXML package parts. PowerPoint renders SVGs via the `asvg:svgBlip` extension element with a PNG fallback for older viewers.
+
+**Critical:** The `Part` constructor signature is `Part(partname, content_type, package, blob)`. Getting the argument order wrong results in 0-byte files that show "image can't be displayed."
+
+```python
+from pptx.opc.constants import RELATIONSHIP_TYPE as RT
+from pptx.opc.package import Part
+from pptx.opc.packuri import PackURI
+from pptx.oxml.ns import qn
+from lxml import etree
+from PIL import Image
+import io
+
+def add_svg_to_slide(slide, svg_path, left, top, width, height, png_fallback_path=None):
+    """
+    Insert SVG with PNG fallback using the asvg:svgBlip extension.
+    If no png_fallback_path provided, generates a minimal placeholder PNG.
+    """
+    with open(svg_path, 'rb') as f:
+        svg_bytes = f.read()
+
+    # PNG fallback (PowerPoint shows this if SVG unsupported)
+    if png_fallback_path:
+        with open(png_fallback_path, 'rb') as f:
+            png_bytes = f.read()
+    else:
+        img = Image.new('RGBA', (1, 1), (0, 0, 0, 0))
+        buf = io.BytesIO()
+        img.save(buf, format='PNG')
+        png_bytes = buf.getvalue()
+
+    slide_part = slide.part
+    package = slide_part.package
+
+    # Find next available image number
+    import re
+    existing = [str(p._partname) for p in package.iter_parts()
+                if hasattr(p, '_partname') and '/media/' in str(p._partname)]
+    max_num = 0
+    for name in existing:
+        m = re.search(r'image(\d+)', name)
+        if m:
+            max_num = max(max_num, int(m.group(1)))
+    next_num = max_num + 1
+
+    # Add parts - NOTE: arg order is (partname, content_type, package, blob)
+    png_part = Part(PackURI(f'/ppt/media/image{next_num}.png'), 'image/png', package, png_bytes)
+    png_rId = slide_part.relate_to(png_part, RT.IMAGE)
+
+    svg_part = Part(PackURI(f'/ppt/media/image{next_num + 1}.svg'), 'image/svg+xml', package, svg_bytes)
+    svg_rId = slide_part.relate_to(svg_part, RT.IMAGE)
+
+    # Build pic element with SVG extension
+    spTree = slide.shapes._spTree
+    pic = etree.SubElement(spTree, qn('p:pic'))
+
+    nvPicPr = etree.SubElement(pic, qn('p:nvPicPr'))
+    cNvPr = etree.SubElement(nvPicPr, qn('p:cNvPr'))
+    cNvPr.set('id', str(next_num + 100))
+    cNvPr.set('name', 'SVG Image')
+    cNvPicPr = etree.SubElement(nvPicPr, qn('p:cNvPicPr'))
+    picLocks = etree.SubElement(cNvPicPr, qn('a:picLocks'))
+    picLocks.set('noChangeAspect', '1')
+    etree.SubElement(nvPicPr, qn('p:nvPr'))
+
+    blipFill = etree.SubElement(pic, qn('p:blipFill'))
+    blip = etree.SubElement(blipFill, qn('a:blip'))
+    blip.set(qn('r:embed'), png_rId)
+
+    extLst = etree.SubElement(blip, qn('a:extLst'))
+    ext = etree.SubElement(extLst, qn('a:ext'))
+    ext.set('uri', '{96DAC541-7B7A-43D3-8B79-37D633B846F1}')
+    SVG_NS = 'http://schemas.microsoft.com/office/drawing/2016/SVG/main'
+    svgBlip = etree.SubElement(ext, '{%s}svgBlip' % SVG_NS)
+    svgBlip.set(qn('r:embed'), svg_rId)
+
+    stretch = etree.SubElement(blipFill, qn('a:stretch'))
+    etree.SubElement(stretch, qn('a:fillRect'))
+
+    spPr = etree.SubElement(pic, qn('p:spPr'))
+    xfrm = etree.SubElement(spPr, qn('a:xfrm'))
+    off = etree.SubElement(xfrm, qn('a:off'))
+    off.set('x', str(left))
+    off.set('y', str(top))
+    ext_elem = etree.SubElement(xfrm, qn('a:ext'))
+    ext_elem.set('cx', str(width))
+    ext_elem.set('cy', str(height))
+    prstGeom = etree.SubElement(spPr, qn('a:prstGeom'))
+    prstGeom.set('prst', 'rect')
+    etree.SubElement(prstGeom, qn('a:avLst'))
+
+    return svg_rId
+```
+
+## Available Slide Layouts
+
+| Index | Name | Placeholders |
+|-------|------|-------------|
+| 0 | Title + Speaker | title, 3x body |
+| 1 | Title + Cont | title, body |
+| 2 | Divider | title only |
+| 3 | Title + 3x Cont with Headings | title, 6x body |
+| 4 | Title + Sub + Cont | title, 2x body |
+| 5 | Thank You x1 | title, body |
+| 6 | Title + 2x Speaker | title, 5x body |
+| 7 | Title Only | title |
+| 8 | Title + Subtitle | title, body |
+| 9 | Title + Cont + Right Img Small | title, body, picture |
+| 10 | Title + 2x Cont with Headings | title, 4x body |
+| 11 | Quote | title, 2x body |
+| 12 | Code | body |
+| 13 | Thank You 2x | title, 3x body |
+| 14 | Holding | (none) |
+| 15 | Full Image | picture |
+| 16 | Video | body |
+
+## Fonts
+
+The deck uses:
+- **Play** for headers/titles (theme major font)
+- **Century Gothic** for body text (theme minor font)
+
+Do not introduce other fonts. Theme references `+mj-lt` and `+mn-lt` resolve to Play and Century Gothic respectively.
+
 ## Pitfalls and Rules
 
 1. **Formatting is per-run, not per-paragraph.** Never overwrite `runs[0].text` with a full line if the paragraph originally had multiple styled runs. You will lose color/bold formatting. Always inspect the original run structure first.
@@ -254,31 +486,13 @@ Do NOT put the source inside the body placeholder. It floats up with the content
 
 6. **Batch operations order: delete, then add, then reorder.** Do all deletions first (reverse index order), then all additions, then reorder once at the end.
 
-## Available Slide Layouts
+7. **Use theme colors, not hardcoded RGB.** Ensures slides adapt if the theme changes. Use `MSO_THEME_COLOR.*` constants.
 
-| Index | Name | Placeholders |
-|-------|------|-------------|
-| 0 | Title + Speaker | title, 3x body |
-| 1 | Title + Cont | title, body |
-| 2 | Divider | title only |
-| 3 | Title + 3x Cont with Headings | title, 6x body |
-| 4 | Title + Sub + Cont | title, 2x body |
-| 7 | Title Only | title |
-| 8 | Title + Subtitle | title, body |
-| 9 | Title + Cont + Right Img Small | title, body, picture |
-| 10 | Title + 2x Cont with Headings | title, 4x body |
+8. **No rounded corners on custom shapes.** Use `MSO_SHAPE.RECTANGLE` not `ROUNDED_RECTANGLE` for the clean card style.
 
-## Fonts
+9. **Remove unused placeholders.** When using "Title Only" or other layouts for custom slides, remove placeholder elements from `_spTree` so empty fields don't show.
 
-The deck uses:
-- **Play** for headers/titles (theme major font)
-- **Century Gothic** for body text (theme minor font)
-
-Do not introduce other fonts. Theme references `+mj-lt` and `+mn-lt` resolve to Play and Century Gothic respectively.
-
-## Images
-
-All images are raster (PNG/JPG). Zero SVGs. If replacing images, note that pptx SVG support requires newer PowerPoint versions.
+10. **Align to standard coordinates.** Custom slides must use the same title position (left=609600, top=400019) and content start (top=1445931) as placeholder-based slides.
 
 ## Research Sources for Updates
 
