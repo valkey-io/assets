@@ -1,1 +1,1 @@
-When working on the presentation or slides, read `slides-skill.md` for deck structure, update process, and programmatic editing instructions.
+When working on the presentation or slides, read `slides-skill.md` for the Valkey slide template (theme, type scale, layouts, geometry) and the programmatic editing workflow. Deck-specific structure and update notes live next to each deck in `slides/*.md`.
