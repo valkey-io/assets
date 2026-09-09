@@ -174,8 +174,8 @@ with real arrowheads instead of block arrows. Slot ranges are the correct ones
 (0–5460 / 5461–10922 / 10923–16383); the originals had 8196/8197 and 16343, which are wrong.
 
 `arrow()` sets `a:tailEnd` (and `a:prstDash`) directly, because python-pptx has no arrowhead API.
-Child order inside `a:ln` matters: `prstDash` before `tailEnd`. **`mock_render.py` does not draw
-arrowheads or dashes**, so verify those in the XML, not the render.
+Child order inside `a:ln` matters: `prstDash` before `tailEnd`. An approximate renderer will not draw
+arrowheads or dashes, so verify those in the XML, not the render.
 
 ## Slot migration
 
@@ -247,8 +247,8 @@ Four points from a review pass, and what happened to each:
   **Caveat:** the concept icons only exist in `#6983FF`, so they lose contrast on the deep purple;
   picking it means generating white icon variants.
 
-  `mock_render.py` used to hardcode the stock peach and so rendered this correct deck wrong. It reads
-  `theme1.xml` now.
+  Read the scheme from `theme1.xml` when checking this. A renderer with a hardcoded palette shows the
+  old peach and makes a correct deck look wrong.
 
 ## Instance marks
 
@@ -327,8 +327,8 @@ yields the expected placeholder count when a slide is added from it. `theme1.xml
 `accent6 = E0A2AF`. Of 271 slide runs, all pinned fonts are Arial and exactly 8 inherit from a
 layout: the four lines on slide 1 and the four on slide 21.
 
-Layout verified through `mock_render.py`, which substitutes a generic sans for Play and Century
-Gothic. **Not verified in PowerPoint**, and two things specifically cannot be:
+Layout verified with an approximate HTML render, which substitutes a generic sans for Play and
+Century Gothic. **Not verified in PowerPoint**, and two things specifically cannot be:
 
 - **Type scale and alignment on slides built from a layout.** The mock resolves no *text*
   inheritance, so the `lstStyle` sizes (130pt big number, 54pt closing, 40pt insight, 18/13pt cards)
@@ -336,15 +336,22 @@ Gothic. **Not verified in PowerPoint**, and two things specifically cannot be:
   stock layouts used for the entire template type scale, and one of them (`Video`) set `algn="ctr"`
   the same way, which is the evidence it is right. It has not been seen.
 
-The list rows *are* verified in the mock: it resolves placeholder fills from the layout now, added
-after the gradient bug above, and the layout-built rows render identically to generator-built slide
-14.
+The list rows render identically to generator-built slide 14, checked by resolving the placeholder
+fill from the layout rather than reading the slide's own empty `spPr`. A renderer that skips that
+shows the rows as bare text, which is how the gradient bug above stayed hidden.
 
-`slides/layout_gallery.py` is the check: it strips the deck and adds one filled slide per layout,
-which is what proved all eleven still work after the stock layouts were removed. It fails loudly if a
-layout's placeholder count changes. Run it, open the result once, and confirm the type scale.
+The check that matters: copy the deck, strip its slides, add one slide from every layout, and fill
+every placeholder, asserting the placeholder count is what you expected. That is what proved all
+eleven still work after the stock layouts were removed. Open the result once and confirm the type
+scale, which no headless render will show you.
 
-```bash
-python3 slides/layout_gallery.py            # -> /tmp/layout-gallery.pptx
-python3 slides/mock_render.py /tmp/layout-gallery.pptx /tmp/gallery.png
+```python
+prs = Presentation(copy_of_deck)
+for i in range(len(prs.slides) - 1, -1, -1):
+    prs.part.drop_rel(prs.slides._sldIdLst[i].rId)
+    del prs.slides._sldIdLst[i]
+for layout in prs.slide_layouts:
+    slide = prs.slides.add_slide(layout)
+    phs = sorted(slide.placeholders, key=lambda p: p.placeholder_format.idx)
+    assert len(phs) == len(sample_text[layout.name]), layout.name
 ```

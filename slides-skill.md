@@ -16,9 +16,9 @@ all four, so anything in the Template section is safe to rely on.
 2. **These pptx files are almost all untracked in git.** Only `Valkey community deck.pptx` is
    committed. There is no undo for the others. Before any destructive step, copy the file aside, and
    consider suggesting the user commit first.
-3. **Dump the deck before editing.** `python3 slides/dump_deck.py "<deck>.pptx"` prints every
-   shape, position, run, chart series, and speaker note. Never edit a slide you have not dumped.
-   Run structure and shape names are not guessable.
+3. **Dump the deck before editing.** Walk every shape, position, run, chart series and speaker
+   note, and read it back. Never edit a slide you have not dumped: run structure and shape names
+   are not guessable.
 4. **Copy to `/tmp` and test there first** for anything structural (adding, deleting, reordering
    slides, replacing chart data). Save, reopen, re-dump, confirm, then apply to the real file.
 
@@ -29,12 +29,8 @@ Chrome for the icon and rendering tooling.
 
 | Script | What it does |
 |--------|-------------|
-| `slides/dump_deck.py` | Dump a deck to text: layouts, shapes, positions, runs with sizes, chart series, notes. `python3 slides/dump_deck.py "<deck>.pptx" [slide_no ...]` |
-| `slides/mock_render.py` | Approximate-render a deck to PNG so you can actually look at it. See Verifying Your Work. |
 | `slides/pptx_svg.py` | `add_svg(slide, svg, png_fallback, left, top, w, h)` to embed an SVG. |
 | `slides/pptx_layout.py` | Add slide layouts to the master, which python-pptx cannot do. See Adding a Layout to the Master. |
-| `slides/layout_gallery.py` | One filled placeholder slide per layout, to check the master. `python3 slides/layout_gallery.py [deck] [out]` |
-| `slides/build_cve_tsunami_deck.py` | Builder for the October 2026 CVE Tsunami talk. Worked example of building a real talk deck on the Valkey layouts. |
 | `slides/build_placeholder_deck.py` | Re-runnable builder for the placeholder deck. Good worked example of cards, icon embedding, and building a deck from scratch. |
 | `slides/icons/` | 16 reusable Valkey-blue outline icons, plus 4x PNG fallbacks in `icons/png/`. |
 
@@ -686,8 +682,7 @@ viewers. Three traps, all of which produce silently wrong output:
    Then assert it: the rendered content's bounding box should fill most of the canvas. Under ~60%
    means something went wrong. `rasterize()` in `build_placeholder_deck.py` does all of this.
 3. **`shape.image` returns the PNG fallback, not the SVG.** It resolves the `a:blip` `r:embed`. To
-   read the actual SVG, follow the `svgBlip` `r:embed` instead (see `svg_or_png` in
-   `mock_render.py`).
+   read the actual SVG, follow the `svgBlip` `r:embed` instead.
 
 ## Running Header
 
@@ -794,58 +789,57 @@ design onto every slide. See Adding a Layout to the Master.
 
 ## Verifying Your Work
 
-There is no LibreOffice or PowerPoint CLI here, but you can still **see your slides**. Use the
-mock renderer, then Read the PNG:
+There is no LibreOffice or PowerPoint CLI here, but you can still **see your slides**: read the real
+geometry, theme fills, text runs and embedded images out of the file, lay them out as HTML, and
+screenshot that with headless Chrome. An approximate renderer built that way reliably catches the
+things that actually go wrong: text overflowing a card, shapes colliding, icons at the wrong scale,
+dead space, bad alignment.
 
-```bash
-python3 slides/mock_render.py "slides/<deck>.pptx" /tmp/deck.png
-```
+The rest of this section is what such a renderer can and cannot tell you, learned by building one.
+It is worth the hour, and the gaps below are worth knowing before you trust any output.
 
-It reads real geometry, theme fills, text runs, and embedded images out of the file and lays them
-out as HTML, then screenshots that with headless Chrome. It reliably catches the things that
-actually go wrong: text overflowing a card, shapes colliding, icons at the wrong scale, dead space,
-bad alignment.
+**Draw master and layout content beneath each slide's own shapes** (the corner Valkey logo, the dark
+full-bleed backgrounds on the title layouts), or what you see omits inherited artwork and
+misrepresents the slide badly.
 
-It draws master and layout content (the corner Valkey logo, the dark full-bleed backgrounds on the
-title layouts) beneath each slide's own shapes, so what you see includes inherited artwork.
-
-It is an approximation, not a renderer. Known gaps: Play and Century Gothic fall back to a generic
+It is an approximation, not a renderer. Expect these gaps: Play and Century Gothic fall back to a generic
 sans so line breaks differ slightly; autofit, **bullet glyphs**, **paragraph `spcBef` spacing**,
 rotation, gradients, and shadows are ignored; charts draw as labelled grey boxes; placeholder text
 inherited from a layout does not appear. **Never claim a slide is visually correct on the strength
-of the mock alone.** It proves layout, not typography. Say which you verified, and check the
+of an approximate render alone.** It proves layout, not typography. Say which you verified, and check the
 things it cannot show (carets, spacing) in the XML instead.
 
-**It resolves no *text* inheritance from a layout,** which limits what it can tell you about a slide
-built from one. Position and size of the box come through, because those are on the slide's own
+**Text inheritance from a layout is the hardest gap to close,** and it limits what any quick renderer
+tells you about a slide built from one. Position and size of the box come through, because those are on the slide's own
 placeholder, but nothing from the layout's `lstStyle` does: a 130pt big number and a 13pt card body
-render at the same default, and `algn="ctr"` renders left. Mock gaps rather than deck bugs, and they
-cannot be settled here. To check type scale, add a slide from the layout, fill the placeholders, and
-**open it in PowerPoint once.**
+render at the same default, and `algn="ctr"` renders left. Renderer gaps rather than deck bugs, and they
+cannot be settled that way. To check type scale, add a slide from the layout, fill the placeholders,
+and **open it in PowerPoint once.**
 
-It *does* resolve a placeholder's **fill** from its layout placeholder, and it draws linear
-`a:gradFill`. Both were added because their absence hid a real bug: a row placeholder whose card
-background lives on the layout rendered as bare text, so a broken fill shipped unseen. If you add a
-fill mechanism the mock does not know about, teach it rather than working around it.
+**Do resolve a placeholder's *fill* from its layout placeholder, and do draw linear `a:gradFill`.**
+Skipping either hid a real bug once: a row placeholder whose card background lives on the layout
+rendered as bare text, so a broken fill shipped unseen. If you use a fill mechanism your renderer
+does not know about, teach it rather than working around it.
 
 What you *can* establish without opening it: that the mechanism is the one the template already
 relies on everywhere. Both size and alignment reach slides through layout `lstStyle` in the stock
 layouts — that is where the whole type scale comes from, and `Video` sets `algn="ctr"` there. If
 inheritance were broken, every stock layout would be broken too.
 
-A caution learned the hard way, three times: the mock has had bugs that made *correct* decks look
-broken. An alignment map keyed on XML values instead of python-pptx enum names; the same for theme
-colours; and PowerPoint's internal text margins applied as CSS padding without
-`box-sizing:border-box`, which drew every filled shape up to 0.2in wider than it really was. It now
-draws unmapped theme colours in magenta and warns rather than quietly substituting black.
+A caution learned the hard way, four times: a renderer's own bugs make *correct* decks look broken.
+An alignment map keyed on XML values instead of python-pptx enum names; the same for theme colours;
+PowerPoint's internal text margins applied as CSS padding without `box-sizing:border-box`, which drew
+every filled shape up to 0.2in wider than it really was; and a hardcoded colour scheme that rendered
+the patched `accent6` as the stock peach. Read the theme from `theme1.xml`, and draw unmapped theme
+colours in magenta with a warning rather than quietly substituting black.
 
-**When the mock looks wrong, confirm against the XML before "fixing" the deck.** Measuring the
+**When the render looks wrong, confirm against the XML before "fixing" the deck.** Measuring the
 rendered PNG (bounding boxes of a known colour) against the EMU geometry in the file is the fastest
 way to tell a renderer bug from a real one.
 
 Alongside it, always:
 
-- Re-dump every slide you touched (`dump_deck.py`) and read it back.
+- Re-dump every slide you touched and read it back.
 - Check bounds arithmetic: `left + width <= 12192000`, `top + height <= 6858000`.
 - Count runs before and after. A paragraph that had two runs and now has one lost its formatting.
 - Reopen the saved file with python-pptx. If it raises, PowerPoint will complain too.
@@ -888,10 +882,7 @@ For a pixel-accurate check, LibreOffice (`brew install --cask libreoffice`) woul
 
 Per-deck structure, update cadence, and content sources live alongside each deck:
 
-- `slides/valkey-community-deck.md` — the reusable community deck
-- `slides/vertical-scaling-wall-deck.md` — The Vertical Scaling wall talk
 - `slides/valkey-placeholder-slides.md` — the placeholder/starter slide library
-- `slides/cve-tsunami-deck.md` — Open Source Maintainers vs. The CVE Tsunami, October 2026
 
 When you learn something new about a deck, write it there. When you learn something about the
 template or the tooling, write it here.
